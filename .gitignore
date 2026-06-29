@@ -1,0 +1,8 @@
+# Environment variables
+.env
+
+# Backup files
+*.tar.gz
+
+# node_modules
+node_modules/

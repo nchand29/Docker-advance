@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  app:
+    build: ./app
+    container_name: node-app
+    ports:
+      - "${PORT}:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: ${PORT}
+      MONGO_URI: ${MONGO_URI}
+    volumes:
+      - ./app:/app
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+    # Security Best Practices
+    # read_only: true
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    tmpfs:
+      - /tmp
+
+  mongo:
+    image: mongo:7
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${Mongodb_root_username}
+      MONGO_INITDB_ROOT_PASSWORD: ${Mongodb_root_password}
+    volumes:
+      - mongo-data:/data/db
+
+  mongo-express:
+    image: mongo-express:1.0.0
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${Mongodb_root_username}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${Mongodb_root_password}
+      ME_CONFIG_MONGODB_SERVER: mongo-db
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+volumes:
+  mongo-data:
+networks:
+  app-network:
+    # name: app-network ->if you want to specify a custom name for the network
+    driver: bridge

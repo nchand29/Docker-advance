@@ -526,3 +526,52 @@ Nishant Chand Rajwar
 - Docker Compose
 - MongoDB
 - Nginx
+## Docker log aggregation
+
+This project includes a local log aggregation stack:
+
+- Loki stores and queries logs.
+- Promtail discovers Docker containers, reads their stdout/stderr logs, and pushes them to Loki.
+- Grafana visualizes logs and request metrics from Loki.
+
+Start the full stack:
+
+```bash
+docker compose up --build
+```
+
+Open Grafana:
+
+```text
+http://localhost:3001
+```
+
+Default login:
+
+```text
+username: admin
+password: admin
+```
+
+Open the `Docker Observability / Docker Application Logs` dashboard. It shows:
+
+- live application logs from the `node-app` container
+- request rate grouped by HTTP status
+- average request duration from structured JSON logs
+
+Generate sample traffic:
+
+```bash
+curl http://localhost:3000/
+curl http://localhost:3000/health
+```
+
+Useful Loki queries in Grafana Explore:
+
+```logql
+{container="node-app"}
+{container="node-app", level="error"}
+{container="node-app"} | json | method="GET"
+sum by (status) (rate({container="node-app", status!=""}[1m]))
+avg_over_time({container="node-app"} | json | duration_ms != "" | unwrap duration_ms [5m])
+```
